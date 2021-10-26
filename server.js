@@ -13,9 +13,8 @@ const passport = require('passport')
 const Emitter = require('events')
 
 //Database connection
-const url = 'mongodb+srv://root:root@cluster0.jaxeb.mongodb.net/pizza?retryWrites=true&w=majority' ;
 
-mongoose.connect(url, { useNewUrlParser:true, useUnifiedTopology:true });
+mongoose.connect(process.env.MONGO_CONNECTION_URL, { useNewUrlParser:true, useUnifiedTopology:true });
 const connection = mongoose.connection;
 connection.once('open', () => {
     console.log('Database Connected...');
@@ -30,7 +29,7 @@ app.use(session({
     secret: process.env.COOKIE_SECRET,
     resave: false,
     store: MongoDbStore.create({                                                                               //session store in datbase
-        mongoUrl: 'mongodb+srv://root:root@cluster0.jaxeb.mongodb.net/pizza?retryWrites=true&w=majority'
+        mongoUrl: process.env.MONGO_CONNECTION_URL
     }),
     saveUninitialized: false,
     cookie: { maxAge: 1000 * 60 * 60 * 24 }               //24 hours
@@ -63,7 +62,9 @@ app.set('views', path.join(__dirname,'/resources/views'));
 app.set('view engine','ejs');
 
 require('./routes/web')(app);                          //call function (initial routes from web.js)
-
+app.use((req,res) => {
+    res.status(404).render('errors/404')
+})
 
 const server = app.listen(PORT, ()=>{
     console.log(`Listening on port ${PORT}`);
